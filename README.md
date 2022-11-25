@@ -19,7 +19,7 @@ Anyone who would open malicious file (Program would tell you where it's located)
 1. Install python (Tested on python 3.8.9 Worked Perfectly Fine)
 2. Install Packages:
     ```sh
-    pip install colorama keyboard requests socket threading
+    pip install colorama keyboard requests socket threading pyinstaller
     ```
 3. Open ports with your ip TCP/UDP on 9616 port!
 4. Run FoxStealer
