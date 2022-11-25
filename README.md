@@ -12,7 +12,7 @@ Anyone who would open malicious file (Program would tell you where it's located)
 
 ### Built With:
 
-* [![Python][Python.org][Python-url]]
+* [Python](python.org)
 
 ## Getting Started
 
